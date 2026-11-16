@@ -1,0 +1,18 @@
+# VoidPE Resource Pack — русский язык
+# Скорборд / 사이дбар
+scoreboard.voidpe.title=VOIDPE
+scoreboard.voidpe.name=Имя
+scoreboard.voidpe.donate=Донат
+scoreboard.voidpe.title=Титул
+scoreboard.voidpe.coins=Монеты
+scoreboard.voidpe.shards=Осколки
+scoreboard.voidpe.kd=У/С
+scoreboard.voidpe.ping=Пинг
+
+# Кастомные модели / предметы
+item.voidpe:void_shard.name=Осколок Пустоты
+entity.voidpe:void_warden.name=Страж Пустоты
+
+# UI
+ui.voidpe.sidebar_logo=Логотип скорборда VoidPE
+ui.voidpe.pack_icon=Иконка пака VoidPE
