@@ -361,6 +361,30 @@ class BedrockPackDownloaderApp:
                         pass
                     found_packs.append(pack_dir)
                     tree.insert("", tk.END, iid=str(len(found_packs) - 1), values=(pack_name, cache_dir.name, str(pack_dir)))
+
+                for fpath in cache_dir.rglob("*"):
+                    if not fpath.is_file() or fpath in seen_paths:
+                        continue
+                    if fpath.suffix.lower() in (".mcpack", ".zip") or (fpath.stat().st_size > 10000 and fpath.suffix == ""):
+                        try:
+                            with open(fpath, "rb") as fp:
+                                if fp.read(2) != b"PK":
+                                    continue
+                        except Exception:
+                            continue
+                        seen_paths.add(fpath)
+                        pack_name = fpath.name
+                        try:
+                            with zipfile.ZipFile(fpath, "r") as zf:
+                                for zname in zf.namelist():
+                                    if zname.endswith("manifest.json"):
+                                        data = json.loads(zf.read(zname).decode("utf-8", errors="replace"))
+                                        pack_name = data.get("header", {}).get("name", fpath.name)
+                                        break
+                        except Exception:
+                            pass
+                        found_packs.append(fpath)
+                        tree.insert("", tk.END, iid=str(len(found_packs) - 1), values=(pack_name, cache_dir.name, str(fpath)))
             except Exception:
                 pass
 
@@ -369,14 +393,17 @@ class BedrockPackDownloaderApp:
             if not sel:
                 messagebox.showwarning("Внимание", "Выберите пак из списка.", parent=win)
                 return
-            pack_dir = found_packs[int(sel[0])]
+            pack_item = found_packs[int(sel[0])]
             save_dir = Path(self.save_dir_var.get())
             save_dir.mkdir(parents=True, exist_ok=True)
-            out_file = save_dir / f"{pack_dir.name}.mcpack"
-            with zipfile.ZipFile(out_file, "w", zipfile.ZIP_DEFLATED) as zf:
-                for file_path in pack_dir.rglob("*"):
-                    if file_path.is_file():
-                        zf.write(file_path, file_path.relative_to(pack_dir))
+            out_file = save_dir / f"{pack_item.stem}.mcpack"
+            if pack_item.is_file():
+                shutil.copy2(pack_item, out_file)
+            else:
+                with zipfile.ZipFile(out_file, "w", zipfile.ZIP_DEFLATED) as zf:
+                    for file_path in pack_item.rglob("*"):
+                        if file_path.is_file():
+                            zf.write(file_path, file_path.relative_to(pack_item))
             messagebox.showinfo("Готово", f"Пак сохранён:\n{out_file}", parent=win)
 
         ttk.Button(frame, text="Сохранить выбранный как .mcpack", style="Green.TButton", command=export_selected).pack(
