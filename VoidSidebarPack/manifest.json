@@ -1,0 +1,30 @@
+{
+  "format_version": 2,
+  "header": {
+    "description": "VoidPE: \u043b\u043e\u0433\u043e\u0442\u0438\u043f \u0438 \u0438\u043a\u043e\u043d\u043a\u0438 \u0441\u043a\u043e\u0440\u0431\u043e\u0440\u0434\u0430 (\u0448\u0440\u0438\u0444\u0442\u043e\u0432\u044b\u0435 \u0433\u043b\u0438\u0444\u044b). \u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043d\u044b\u0435 \u0442\u0435\u043a\u0441\u0442\u0443\u0440\u044b \u0438 \u0438\u043a\u043e\u043d\u043a\u0430 \u043f\u0430\u043a\u0430 \u0432\u044b\u0441\u043e\u043a\u043e\u0433\u043e \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u0430. \u0421\u0442\u0430\u0432\u0438\u0442\u0441\u044f \u043d\u0430 Geyser (\u043f\u0430\u043f\u043a\u0430 packs).",
+    "name": "VoidPE Sidebar Logo",
+    "uuid": "31b63ebd-5bbb-4af0-99a4-8189308c4690",
+    "version": [
+      1,
+      8,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      20,
+      0
+    ]
+  },
+  "modules": [
+    {
+      "description": "VoidPE Sidebar Logo",
+      "type": "resources",
+      "uuid": "ee7909cc-1619-4c99-81a3-cdf2376a3bf5",
+      "version": [
+        1,
+        8,
+        0
+      ]
+    }
+  ]
+}
