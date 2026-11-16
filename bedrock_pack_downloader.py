@@ -21,20 +21,31 @@ USER_AGENT = "BedrockPackDownloader/1.0 (Minecraft Bedrock 1.26.63)"
 def get_server_cache_dirs() -> list[Path]:
     dirs: list[Path] = []
     local_app_data = os.environ.get("LOCALAPPDATA", "")
-    if not local_app_data:
-        return dirs
-    for pkg in (
-        "Microsoft.MinecraftUWP_8wekyb3d8bbwe",
-        "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe",
-    ):
-        base = Path(local_app_data) / "Packages" / pkg / "LocalState"
-        for sub in (
-            base / "premium_cache" / "resource_packs",
-            base / "games" / "com.mojang" / "resource_packs",
-            base / "games" / "com.mojang" / "server_resource_packs",
+    app_data = os.environ.get("APPDATA", "")
+
+    candidates: list[Path] = []
+    if local_app_data:
+        for pkg in (
+            "Microsoft.MinecraftUWP_8wekyb3d8bbwe",
+            "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe",
         ):
-            if sub.exists():
-                dirs.append(sub)
+            base = Path(local_app_data) / "Packages" / pkg / "LocalState"
+            candidates.extend([
+                base / "premium_cache" / "resource_packs",
+                base / "premium_cache",
+                base / "games" / "com.mojang" / "resource_packs",
+                base / "games" / "com.mojang" / "server_resource_packs",
+                base / "games" / "com.mojang",
+            ])
+    if app_data:
+        candidates.extend([
+            Path(app_data) / "Minecraft Bedrock" / "Users" / "Shared" / "games" / "com.mojang" / "resource_packs",
+            Path(app_data) / "Minecraft Bedrock" / "Users" / "Shared" / "games" / "com.mojang",
+        ])
+
+    for c in candidates:
+        if c.exists() and c not in dirs:
+            dirs.append(c)
     return dirs
 
 
@@ -335,20 +346,24 @@ class BedrockPackDownloaderApp:
         tree.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
 
         found_packs: list[Path] = []
+        seen_paths: set[Path] = set()
         for cache_dir in get_server_cache_dirs():
-            for item in sorted(cache_dir.iterdir()):
-                if not item.is_dir():
-                    continue
-                manifest = item / "manifest.json"
-                pack_name = item.name
-                if manifest.exists():
+            try:
+                for manifest in cache_dir.rglob("manifest.json"):
+                    pack_dir = manifest.parent
+                    if pack_dir in seen_paths:
+                        continue
+                    seen_paths.add(pack_dir)
+                    pack_name = pack_dir.name
                     try:
                         data = json.loads(manifest.read_text(encoding="utf-8", errors="replace"))
-                        pack_name = data.get("header", {}).get("name", item.name)
+                        pack_name = data.get("header", {}).get("name", pack_dir.name)
                     except Exception:
                         pass
-                found_packs.append(item)
-                tree.insert("", tk.END, iid=str(len(found_packs) - 1), values=(pack_name, cache_dir.name, str(item)))
+                    found_packs.append(pack_dir)
+                    tree.insert("", tk.END, iid=str(len(found_packs) - 1), values=(pack_name, cache_dir.name, str(pack_dir)))
+            except Exception:
+                pass
 
         def export_selected():
             sel = tree.selection()
