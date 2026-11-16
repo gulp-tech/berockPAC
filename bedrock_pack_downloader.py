@@ -39,8 +39,7 @@ def get_server_cache_dirs() -> list[Path]:
             ])
     if app_data:
         candidates.extend([
-            Path(app_data) / "Minecraft Bedrock" / "Users" / "Shared" / "games" / "com.mojang" / "resource_packs",
-            Path(app_data) / "Minecraft Bedrock" / "Users" / "Shared" / "games" / "com.mojang",
+            Path(app_data) / "Minecraft Bedrock",
         ])
 
     for c in candidates:
