@@ -18,6 +18,26 @@ MODRINTH_API = "https://api.modrinth.com/v2"
 USER_AGENT = "BedrockPackDownloader/1.0 (Minecraft Bedrock 1.26.63)"
 
 
+def get_server_cache_dirs() -> list[Path]:
+    dirs: list[Path] = []
+    local_app_data = os.environ.get("LOCALAPPDATA", "")
+    if not local_app_data:
+        return dirs
+    for pkg in (
+        "Microsoft.MinecraftUWP_8wekyb3d8bbwe",
+        "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe",
+    ):
+        base = Path(local_app_data) / "Packages" / pkg / "LocalState"
+        for sub in (
+            base / "premium_cache" / "resource_packs",
+            base / "games" / "com.mojang" / "resource_packs",
+            base / "games" / "com.mojang" / "server_resource_packs",
+        ):
+            if sub.exists():
+                dirs.append(sub)
+    return dirs
+
+
 def get_default_bedrock_packs_dir() -> Path:
     local_app_data = os.environ.get("LOCALAPPDATA", "")
     if local_app_data:
@@ -246,6 +266,12 @@ class BedrockPackDownloaderApp:
         )
         self.download_btn.pack(side=tk.LEFT, padx=(0, 8))
 
+        ttk.Button(
+            action_frame,
+            text="Паки с серверов (экспорт в .mcpack)",
+            command=self._open_server_packs_window,
+        ).pack(side=tk.LEFT, padx=(0, 8))
+
         self.auto_install_var = tk.BooleanVar(value=True)
         auto_chk = tk.Checkbutton(
             action_frame,
@@ -282,6 +308,66 @@ class BedrockPackDownloaderApp:
         self.progress = ttk.Progressbar(main, mode="determinate", maximum=100)
         self.progress.pack(fill=tk.X, pady=(0, 6))
         ttk.Label(main, textvariable=self.status_var, style="Sub.TLabel").pack(anchor=tk.W)
+
+    def _open_server_packs_window(self):
+        win = tk.Toplevel(self.root)
+        win.title("Паки с серверов Minecraft Bedrock")
+        win.geometry("760x440")
+        win.configure(bg="#181a1f")
+
+        frame = ttk.Frame(win, padding=12)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(
+            frame,
+            text="Зайдите на сервер в Minecraft Bedrock, затем выберите пак из кэша и сохраните в .mcpack:",
+            style="Sub.TLabel",
+        ).pack(anchor=tk.W, pady=(0, 8))
+
+        cols = ("name", "source", "path")
+        tree = ttk.Treeview(frame, columns=cols, show="headings", selectmode="browse")
+        tree.heading("name", text="Название пака")
+        tree.heading("source", text="Папка")
+        tree.heading("path", text="Путь")
+        tree.column("name", width=240)
+        tree.column("source", width=150)
+        tree.column("path", width=330)
+        tree.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+
+        found_packs: list[Path] = []
+        for cache_dir in get_server_cache_dirs():
+            for item in sorted(cache_dir.iterdir()):
+                if not item.is_dir():
+                    continue
+                manifest = item / "manifest.json"
+                pack_name = item.name
+                if manifest.exists():
+                    try:
+                        data = json.loads(manifest.read_text(encoding="utf-8", errors="replace"))
+                        pack_name = data.get("header", {}).get("name", item.name)
+                    except Exception:
+                        pass
+                found_packs.append(item)
+                tree.insert("", tk.END, iid=str(len(found_packs) - 1), values=(pack_name, cache_dir.name, str(item)))
+
+        def export_selected():
+            sel = tree.selection()
+            if not sel:
+                messagebox.showwarning("Внимание", "Выберите пак из списка.", parent=win)
+                return
+            pack_dir = found_packs[int(sel[0])]
+            save_dir = Path(self.save_dir_var.get())
+            save_dir.mkdir(parents=True, exist_ok=True)
+            out_file = save_dir / f"{pack_dir.name}.mcpack"
+            with zipfile.ZipFile(out_file, "w", zipfile.ZIP_DEFLATED) as zf:
+                for file_path in pack_dir.rglob("*"):
+                    if file_path.is_file():
+                        zf.write(file_path, file_path.relative_to(pack_dir))
+            messagebox.showinfo("Готово", f"Пак сохранён:\n{out_file}", parent=win)
+
+        ttk.Button(frame, text="Сохранить выбранный как .mcpack", style="Green.TButton", command=export_selected).pack(
+            anchor=tk.W
+        )
 
     def _choose_dir(self):
         chosen = filedialog.askdirectory(initialdir=self.save_dir_var.get())
