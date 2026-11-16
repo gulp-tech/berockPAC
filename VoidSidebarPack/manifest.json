@@ -1,8 +1,8 @@
 {
   "format_version": 2,
   "header": {
-    "name": "VoidPE Sidebar & Custom Models",
-    "description": "VoidPE: логотип скорборда, иконка пака высокого качества, шрифтовые глифы и кастомные модели для Bedrock / Geyser.",
+    "name": "VoidPE Sidebar Pack",
+    "description": "VoidPE: логотип скорборда и иконка пака на основе кастомного фото (logo-Photoroom). Шрифтовые глифы сайдбара. Для Bedrock / Geyser.",
     "uuid": "31b63ebd-5bbb-4af0-99a4-8189308c4690",
     "version": [
       2,
@@ -17,7 +17,7 @@
   },
   "modules": [
     {
-      "description": "VoidPE Sidebar & Custom Models",
+      "description": "VoidPE Sidebar Pack",
       "type": "resources",
       "uuid": "ee7909cc-1619-4c99-81a3-cdf2376a3bf5",
       "version": [
